@@ -1,0 +1,80 @@
+---
+title: date-wiz
+description: A zero-dependency, TypeScript-native date utility library with smart formatting, business logic, and i18n — all in under 2 KB gzipped.
+template: splash
+hero:
+  tagline: Zero-dependency. TypeScript-native. Under 2 KB gzipped.
+  image:
+    dark: ../../assets/logo-dark.svg
+    light: ../../assets/logo-light.svg
+  actions:
+    - text: Get Started
+      link: /date-wiz-docs/guides/introduction/
+      icon: right-arrow
+      variant: primary
+    - text: API Reference
+      link: /date-wiz-docs/api/format/
+      icon: open-book
+      variant: minimal
+    - text: View on GitHub
+      link: https://github.com/GourangaDasSamrat/date-wiz
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## Why date-wiz?
+
+<CardGrid stagger>
+  <Card title="Zero dependencies" icon="star">
+    Built purely on native `Date` and `Intl`. Nothing from npm reaches your users' browsers.
+  </Card>
+  <Card title="TypeScript native" icon="approve-check-circle">
+    Full type safety, auto-complete for every option, and declaration maps. No `@types/` package needed.
+  </Card>
+  <Card title="Tree-shakable ESM" icon="rocket">
+    Import only `format()` and ship ~1.2 KB. Bundlers drop everything else automatically.
+  </Card>
+  <Card title="Smart formatting" icon="sun">
+    `smartFormat()` returns "Today at 4:30 PM", "Yesterday at 11 AM", or "Oct 12, 2022" — no config.
+  </Card>
+  <Card title="Business day logic" icon="setting">
+    Add business days, count working days, SLA hour checks — with optional holiday exclusions.
+  </Card>
+  <Card title="Intelligent parsing" icon="magnifier">
+    Understands `+2d`, `next_monday`, `20240515`, and `15-05-2024` — no format string needed.
+  </Card>
+</CardGrid>
+
+## Quick look
+
+```ts
+import { wiz, format, getRelativeTime, smartFormat } from 'date-wiz';
+
+// Chainable
+const deadline = wiz(new Date())
+  .add(3, 'businessDays')
+  .setHour(17)
+  .format('LLL');
+// → "March 20, 2026 at 5:00 PM"
+
+// Relative time with precision
+getRelativeTime(twoDaysAgo, { precision: 2 });
+// → "2 days, 4 hours ago"
+
+// Context-aware label
+smartFormat(new Date());
+// → "Today at 2:30 PM"
+
+// i18n — zero locale files bundled
+format(new Date(), 'DD MMMM YYYY', 'bn-BD');
+// → "১৫ মার্চ ২০২৬"
+```
+
+## Explore the docs
+
+<LinkCard title="Installation" description="npm, yarn, pnpm, CDN — get set up in 30 seconds." href="/date-wiz-docs/guides/installation/" />
+<LinkCard title="Quick Start" description="Your first date-wiz call in under 2 minutes." href="/date-wiz-docs/guides/quick-start/" />
+<LinkCard title="API Reference" description="Every function, every option, every type." href="/date-wiz-docs/api/format/" />
+<LinkCard title="i18n Guide" description="Use any locale with zero locale files bundled." href="/date-wiz-docs/guides/i18n/" />
