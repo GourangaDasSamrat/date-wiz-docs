@@ -1,0 +1,114 @@
+---
+title: Error Handling
+description: How date-wiz handles invalid input gracefully — no throws, no NaN, no crashes.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+date-wiz **never throws** on invalid input. Every function that receives a bad date returns a configurable fallback value instead.
+
+---
+
+## Default behaviour
+
+By default, invalid dates return the string `"Invalid Date"`:
+
+```ts
+import { format, getRelativeTime, smartFormat } from 'date-wiz';
+
+format('not a date', 'YYYY')         // → "Invalid Date"
+getRelativeTime('not a date')        // → "Invalid Date"
+smartFormat('not a date')            // → "Invalid Date"
+```
+
+`parse()` is the exception — it returns `null` by default:
+
+```ts
+import { parse } from 'date-wiz';
+
+parse('not a date')  // → null
+```
+
+---
+
+## Custom fallbacks
+
+Every function accepts a `fallback` option:
+
+```ts
+import { format, getRelativeTime, smartFormat } from 'date-wiz';
+
+// Return a dash
+format('bad', 'YYYY', undefined, { fallback: '—' })        // → "—"
+getRelativeTime('bad', { fallback: '—' })                   // → "—"
+smartFormat('bad', { fallback: '—' })                       // → "—"
+
+// Return null (renders nothing in React)
+format('bad', 'YYYY', undefined, { fallback: null })        // → ""
+getRelativeTime('bad', { fallback: null })                  // → ""
+
+// Return empty string explicitly
+format('bad', 'YYYY', undefined, { fallback: '' })          // → ""
+```
+
+---
+
+## Guarding parse() results
+
+`parse()` returns `Date | null`. Always guard before using:
+
+```ts
+import { parse, format } from 'date-wiz';
+
+function displayDate(input: string): string {
+  const d = parse(input);
+  if (!d) return 'Invalid date';
+  return format(d, 'LL');
+}
+```
+
+Or use a custom fallback at the parse stage:
+
+```ts
+const d = parse(userInput) ?? new Date(); // fall back to now
+```
+
+---
+
+## What counts as invalid?
+
+date-wiz considers a date invalid when `isNaN(date.getTime())` — the same condition JavaScript's `Date` uses internally. This includes:
+
+```ts
+new Date('garbage')    // Invalid Date
+new Date(undefined)    // Invalid Date
+new Date(NaN)          // Invalid Date
+new Date('')           // Invalid Date (in most runtimes)
+```
+
+It does **not** include dates that are technically valid but unusual:
+
+```ts
+new Date(0)             // ✅ Valid — Unix epoch
+new Date('1800-01-01')  // ✅ Valid — historical date
+new Date('9999-12-31')  // ✅ Valid — far future
+```
+
+---
+
+## TypeScript and nullability
+
+The `fallback` type is `string | null`. TypeScript ensures you handle both cases:
+
+```ts
+import { format } from 'date-wiz';
+import type { FormatOptions } from 'date-wiz';
+
+const opts: FormatOptions = { fallback: null };
+const result: string = format('bad', 'YYYY', undefined, opts);
+// result is "" when fallback is null — safe to render
+```
+
+<Aside type="tip">
+  In React, returning an empty string from a component is fine. Returning `null` from JSX is also fine. Use `{ fallback: null }` when you want the element to render nothing if the date is invalid.
+</Aside>

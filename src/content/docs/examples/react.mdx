@@ -1,0 +1,139 @@
+---
+title: React
+description: Using date-wiz in a React application with hooks and components.
+---
+
+## Installation
+
+```bash
+npm install date-wiz
+```
+
+---
+
+## Custom hook — relative time with auto-refresh
+
+```tsx
+import { useEffect, useState } from 'react';
+import { getRelativeTime } from 'date-wiz';
+
+function useRelativeTime(date: Date, locale = 'en'): string {
+  const [label, setLabel] = useState(() =>
+    getRelativeTime(date, { locale }),
+  );
+
+  useEffect(() => {
+    const tick = () => setLabel(getRelativeTime(date, { locale }));
+    const id = setInterval(tick, 30_000); // refresh every 30s
+    return () => clearInterval(id);
+  }, [date, locale]);
+
+  return label;
+}
+
+// Usage
+function PostMeta({ createdAt }: { createdAt: Date }) {
+  const ago = useRelativeTime(createdAt);
+  return <time dateTime={createdAt.toISOString()}>{ago}</time>;
+}
+```
+
+---
+
+## Smart timestamp component
+
+```tsx
+import { smartFormat } from 'date-wiz';
+
+interface TimestampProps {
+  date: Date;
+  locale?: string;
+  className?: string;
+}
+
+export function Timestamp({ date, locale, className }: TimestampProps) {
+  return (
+    <time
+      dateTime={date.toISOString()}
+      title={date.toLocaleString(locale)}
+      className={className}
+    >
+      {smartFormat(date, { locale, fallback: '—' })}
+    </time>
+  );
+}
+
+// Renders: "Today at 4:30 PM" | "Yesterday at 11 AM" | "Oct 12, 2022"
+```
+
+---
+
+## Date range picker helper
+
+```tsx
+import { addBusinessDays, format, isBefore } from 'date-wiz';
+import { useState } from 'react';
+
+function SLACalculator() {
+  const [days, setDays] = useState(5);
+  const [holidays, setHolidays] = useState<string[]>([]);
+
+  const deadline = addBusinessDays(new Date(), days, { holidays });
+
+  return (
+    <div>
+      <label>
+        SLA business days:
+        <input
+          type="number"
+          value={days}
+          onChange={e => setDays(Number(e.target.value))}
+          min={1}
+          max={90}
+        />
+      </label>
+
+      <p>
+        Deadline:{' '}
+        <strong>{format(deadline, 'dddd, DD MMMM YYYY')}</strong>
+      </p>
+    </div>
+  );
+}
+```
+
+---
+
+## Localized date display
+
+```tsx
+import { format } from 'date-wiz';
+
+const LOCALES = {
+  en: 'English',
+  'bn-BD': 'Bengali',
+  fr: 'French',
+  ar: 'Arabic',
+  ja: 'Japanese',
+};
+
+function LocalizedDate({ date }: { date: Date }) {
+  return (
+    <table>
+      <thead>
+        <tr><th>Locale</th><th>Formatted date</th></tr>
+      </thead>
+      <tbody>
+        {Object.entries(LOCALES).map(([locale, name]) => (
+          <tr key={locale}>
+            <td>{name}</td>
+            <td dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+              {format(date, 'DD MMMM YYYY', locale)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```

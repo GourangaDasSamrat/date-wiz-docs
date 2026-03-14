@@ -1,0 +1,116 @@
+---
+title: Business Day Logic
+description: A practical guide to SLA calculations, working hours checks, and holiday-aware scheduling.
+---
+
+## Overview
+
+date-wiz has first-class business day support with no plugins required. All functions skip weekends automatically and accept a `holidays` array of ISO date strings for public holiday exclusion.
+
+---
+
+## SLA deadline calculation
+
+```ts
+import { addBusinessDays, format } from 'date-wiz';
+
+const ticketOpened = new Date(); // now
+
+// 5-business-day SLA
+const deadline = addBusinessDays(ticketOpened, 5, {
+  holidays: ['2026-04-03', '2026-04-06'], // Good Friday, Easter Monday
+});
+
+console.log(format(deadline, 'LLL'));
+// → "March 23, 2026 at ..."
+```
+
+---
+
+## Working hours SLA check
+
+```ts
+import { isWithinWorkingHours } from 'date-wiz';
+
+function isSLAClock(date: Date): boolean {
+  return isWithinWorkingHours(date, {
+    start: '09:00',
+    end: '18:00',
+    workDays: [1, 2, 3, 4, 5], // Mon–Fri
+  });
+}
+
+// Only count SLA time during business hours
+if (isSLAClock(new Date())) {
+  startSLATimer();
+}
+```
+
+---
+
+## Counting business days between dates
+
+```ts
+import { countBusinessDays } from 'date-wiz';
+
+const start = new Date('2026-03-09'); // Monday
+const end   = new Date('2026-03-20'); // Friday next week
+
+countBusinessDays(start, end)                     // → 9
+countBusinessDays(start, end, {
+  holidays: ['2026-03-17'],                        // St. Patrick's Day
+})                                                 // → 8
+```
+
+---
+
+## Scheduling recurring reminders
+
+```ts
+import { addBusinessDays, format } from 'date-wiz';
+
+function getReminders(start: Date, count: number, holidays: string[]) {
+  return Array.from({ length: count }, (_, i) =>
+    addBusinessDays(start, i + 1, { holidays }),
+  );
+}
+
+const reminders = getReminders(new Date(), 5, ['2026-04-03']);
+reminders.forEach(d => console.log(format(d, 'ddd DD MMM')));
+// Mon 16 Mar
+// Tue 17 Mar
+// Wed 18 Mar
+// Thu 19 Mar
+// Fri 20 Mar
+```
+
+---
+
+## Is today a working day?
+
+```ts
+import { checkIsBusinessDay } from 'date-wiz';
+
+const publicHolidays = ['2026-12-25', '2026-01-01', '2026-08-15'];
+
+if (checkIsBusinessDay(new Date(), { holidays: publicHolidays })) {
+  console.log('SLA clock is running');
+} else {
+  console.log('Weekend or holiday — SLA paused');
+}
+```
+
+---
+
+## Non-standard work weeks
+
+Some regions use a Sunday–Thursday or Saturday–Thursday work week. Pass custom `workDays` to `isWithinWorkingHours`:
+
+```ts
+// Middle East: Sun–Thu
+isWithinWorkingHours(new Date(), {
+  workDays: [0, 1, 2, 3, 4], // 0=Sun … 4=Thu
+  start: '08:00',
+  end: '17:00',
+})
+```

@@ -1,0 +1,72 @@
+---
+title: Introduction
+description: What date-wiz is, why it exists, and how it compares to alternatives.
+---
+
+import { Badge, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+# date-wiz <Badge text="v1.0.0" variant="tip" />
+
+**A zero-dependency, TypeScript-native date utility library** with smart formatting, business day logic, intelligent parsing, and full i18n — all in under 2 KB gzipped.
+
+```ts
+import { wiz, format, getRelativeTime } from 'date-wiz';
+
+// Chainable
+const deadline = wiz(new Date()).add(3, 'businessDays').setHour(17).format('LLL');
+
+// Standalone (tree-shakable)
+const ago = getRelativeTime(oldDate, { locale: 'bn-BD', precision: 2 });
+// → "২ দিন, ৪ ঘন্টা আগে"
+```
+
+---
+
+## Why date-wiz?
+
+Most date libraries make you choose between **size** and **features**. date-wiz doesn't.
+
+| | Moment.js | Day.js | **date-wiz** |
+|---|:---:|:---:|:---:|
+| Zero runtime deps | ❌ | ✅ | ✅ |
+| Bundle size (gzip) | ~70 KB | ~7 KB | **< 2 KB** |
+| TypeScript native | ❌ | Partial | ✅ |
+| Tree-shakable ESM | ❌ | ❌ | ✅ |
+| Business day logic | Plugin | Plugin | ✅ Built-in |
+| Smart formatting | ❌ | ❌ | ✅ Built-in |
+| Intelligent parsing | ❌ | ❌ | ✅ Built-in |
+| i18n via `Intl` | ❌ | Plugin | ✅ Built-in |
+| Immutable | ❌ | ✅ | ✅ |
+
+---
+
+## Key features
+
+<CardGrid>
+  <Card title="Zero dependencies" icon="seti:config">
+    Built purely on native `Date` and `Intl` objects. Nothing from npm ships to your users.
+  </Card>
+  <Card title="TypeScript native" icon="seti:typescript">
+    Full type safety, auto-complete for every option, and declaration maps. No `@types/` package needed.
+  </Card>
+  <Card title="Tree-shakable" icon="seti:webpack">
+    Import only what you use. `date-wiz/format` is ~1.2 KB. Bundlers drop the rest automatically.
+  </Card>
+  <Card title="Smart formatting" icon="seti:smarty">
+    Context-aware labels: "Today at 4:30 PM", "Yesterday at 11 AM", "Oct 12, 2022". No config needed.
+  </Card>
+  <Card title="Business day logic" icon="seti:salesforce">
+    Add/subtract business days, count working days between dates, SLA hour checks — all built-in.
+  </Card>
+  <Card title="Intelligent parsing" icon="seti:smarty">
+    Understands `20240515`, `15-05-2024`, `+2d`, `-1w`, `next_monday` — no format strings needed.
+  </Card>
+</CardGrid>
+
+---
+
+## Quick navigation
+
+<LinkCard title="Installation" description="npm, yarn, pnpm, and CDN setup." href="/date-wiz-docs/guides/installation" />
+<LinkCard title="Quick Start" description="Your first date-wiz call in 2 minutes." href="/date-wiz-docs/guides/quick-start" />
+<LinkCard title="API Reference" description="Complete reference for every function." href="/date-wiz-docs/api/format" />

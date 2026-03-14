@@ -1,0 +1,184 @@
+---
+title: Arithmetic Utilities
+description: add, subtract, diff, isBefore, isAfter, isSameDay, clampDate, startOf, endOf.
+---
+
+## Import
+
+```ts
+import {
+  add, subtract, diff,
+  isBefore, isAfter, isSameDay,
+  clampDate,
+  startOf, endOf,
+} from 'date-wiz';
+```
+
+Or tree-shake from the chainable API — `wiz().add()` / `wiz().subtract()` delegate to these functions internally.
+
+---
+
+## add()
+
+```ts
+function add(date: DateInput, amount: number, unit: DurationUnit): Date
+```
+
+Add a duration to a date. Returns a new `Date`; the original is never mutated.
+
+```ts
+add(new Date(), 3,  'days')          // +3 days
+add(new Date(), 2,  'hours')         // +2 hours
+add(new Date(), 1,  'months')        // +1 month
+add(new Date(), 5,  'businessDays')  // +5 business days
+add(new Date(), 500,'ms')            // +500 milliseconds
+```
+
+---
+
+## subtract()
+
+```ts
+function subtract(date: DateInput, amount: number, unit: DurationUnit): Date
+```
+
+Subtract a duration. Equivalent to `add(date, -amount, unit)`.
+
+```ts
+subtract(new Date(), 1, 'week')   // 7 days ago
+subtract(new Date(), 3, 'months') // 3 months ago
+```
+
+---
+
+## diff()
+
+```ts
+function diff(a: DateInput, b: DateInput, unit?: DurationUnit): number
+```
+
+Get the signed difference between two dates in a given unit. Defaults to `'milliseconds'`.
+
+```ts
+const a = new Date('2024-01-10');
+const b = new Date('2024-01-07');
+
+diff(a, b, 'days')    //  3   (a is 3 days after b)
+diff(b, a, 'days')    // -3   (b is 3 days before a)
+diff(a, b, 'hours')   //  72
+diff(a, b, 'weeks')   //  0.43 (fractional)
+```
+
+---
+
+## isBefore() / isAfter()
+
+```ts
+function isBefore(a: DateInput, b: DateInput): boolean
+function isAfter(a: DateInput,  b: DateInput): boolean
+```
+
+```ts
+isBefore(new Date('2020-01-01'), new Date('2025-01-01')) // true
+isAfter(new Date('2025-01-01'),  new Date('2020-01-01')) // true
+```
+
+---
+
+## isSameDay()
+
+```ts
+function isSameDay(a: DateInput, b: DateInput): boolean
+```
+
+Returns `true` when two dates fall on the same calendar day, regardless of time.
+
+```ts
+isSameDay(
+  new Date('2024-05-15T08:00:00'),
+  new Date('2024-05-15T22:59:59'),
+) // true
+
+isSameDay(
+  new Date('2024-05-15'),
+  new Date('2024-05-16'),
+) // false
+```
+
+---
+
+## clampDate()
+
+```ts
+function clampDate(date: DateInput, min: DateInput, max: DateInput): Date
+```
+
+Clamp a date to a `[min, max]` range.
+
+```ts
+const min = new Date('2024-01-01');
+const max = new Date('2024-12-31');
+
+clampDate(new Date('2023-06-01'), min, max) // → 2024-01-01
+clampDate(new Date('2024-06-15'), min, max) // → 2024-06-15  (unchanged)
+clampDate(new Date('2025-03-01'), min, max) // → 2024-12-31
+```
+
+---
+
+## startOf()
+
+```ts
+function startOf(
+  date: DateInput,
+  unit: 'year' | 'month' | 'week' | 'day' | 'hour' | 'minute',
+): Date
+```
+
+Return the start of the given unit for a date.
+
+```ts
+const d = new Date('2024-05-15T14:30:45.500');
+
+startOf(d, 'minute') // 2024-05-15T14:30:00.000
+startOf(d, 'hour')   // 2024-05-15T14:00:00.000
+startOf(d, 'day')    // 2024-05-15T00:00:00.000
+startOf(d, 'week')   // 2024-05-12T00:00:00.000  (Sunday)
+startOf(d, 'month')  // 2024-05-01T00:00:00.000
+startOf(d, 'year')   // 2024-01-01T00:00:00.000
+```
+
+---
+
+## endOf()
+
+```ts
+function endOf(
+  date: DateInput,
+  unit: 'year' | 'month' | 'week' | 'day' | 'hour' | 'minute',
+): Date
+```
+
+Return the last millisecond of the given unit.
+
+```ts
+endOf(d, 'day')   // 2024-05-15T23:59:59.999
+endOf(d, 'month') // 2024-05-31T23:59:59.999
+endOf(d, 'year')  // 2024-12-31T23:59:59.999
+```
+
+---
+
+## Duration unit reference
+
+| Long | Short | Description |
+|---|---|---|
+| `milliseconds` | `ms` | Milliseconds |
+| `seconds` | `s` | Seconds |
+| `minutes` | `m` | Minutes |
+| `hours` | `h` | Hours |
+| `days` | `d` | Calendar days |
+| `weeks` | `w` | 7-day weeks |
+| `months` | `M` | Calendar months |
+| `years` | `y` | Calendar years |
+| `businessDays` | — | Working days (Mon–Fri) |

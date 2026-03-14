@@ -1,0 +1,103 @@
+---
+title: getRelativeTime()
+description: Human-readable relative time strings with precision levels and full i18n support.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Signature
+
+```ts
+function getRelativeTime(
+  date: DateInput,
+  options?: RelativeTimeOptions,
+): string
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `date` | `DateInput` | — | The date to compare |
+| `options.locale` | `string` | `'en'` | BCP 47 locale |
+| `options.precision` | `1 \| 2 \| 3` | `1` | Number of time units in the output |
+| `options.justNowThreshold` | `number` | `45` | Seconds below which "just now" is shown |
+| `options.fallback` | `string \| null` | `'Invalid Date'` | Returned when the date is invalid |
+| `options.baseDate` | `DateInput` | `new Date()` | Reference point for comparison |
+
+## Examples
+
+```ts
+import { getRelativeTime } from 'date-wiz';
+
+const SEC  = 1000;
+const MIN  = 60 * SEC;
+const HOUR = 60 * MIN;
+const DAY  = 24 * HOUR;
+
+// ── Precision: 1 (default) ────────────────────────────────────────────
+getRelativeTime(new Date(Date.now() - 20 * SEC))    // "20 seconds ago"
+getRelativeTime(new Date(Date.now() - 5  * MIN))    // "5 minutes ago"
+getRelativeTime(new Date(Date.now() - 3  * HOUR))   // "3 hours ago"
+getRelativeTime(new Date(Date.now() - 2  * DAY))    // "2 days ago"
+getRelativeTime(new Date(Date.now() + 7  * DAY))    // "in 7 days"
+
+// ── Precision: 2 ──────────────────────────────────────────────────────
+getRelativeTime(
+  new Date(Date.now() - (2 * DAY + 4 * HOUR)),
+  { precision: 2 },
+)
+// → "2 days, 4 hours ago"
+
+// ── i18n ──────────────────────────────────────────────────────────────
+getRelativeTime(new Date(Date.now() - 5 * MIN), { locale: 'fr' })    // "il y a 5 minutes"
+getRelativeTime(new Date(Date.now() - 5 * MIN), { locale: 'de' })    // "vor 5 Minuten"
+getRelativeTime(new Date(Date.now() - 5 * MIN), { locale: 'bn-BD' }) // "৫ মিনিট আগে"
+getRelativeTime(new Date(Date.now() - 5 * MIN), { locale: 'ar' })    // "قبل ٥ دقائق"
+getRelativeTime(new Date(Date.now() - 5 * MIN), { locale: 'ja' })    // "5分前"
+
+// ── Custom threshold ──────────────────────────────────────────────────
+// Treat anything within 2 minutes as "just now"
+getRelativeTime(new Date(Date.now() - 90 * SEC), { justNowThreshold: 120 })
+// → "just now"
+
+// ── Custom base date ──────────────────────────────────────────────────
+getRelativeTime(
+  new Date('2024-01-08'),
+  { baseDate: new Date('2024-01-10') },
+)
+// → "2 days ago"
+
+// ── Invalid date ──────────────────────────────────────────────────────
+getRelativeTime('not a date', { fallback: '—' }) // "—"
+```
+
+---
+
+## How "just now" works
+
+When the absolute difference between the date and the base date is less than `justNowThreshold` seconds (default: 45), the output is the Intl equivalent of "just now" (e.g. `"now"` in English, `"maintenant"` in French). This threshold is configurable.
+
+```ts
+// 30 seconds ago — within threshold → "just now"
+getRelativeTime(new Date(Date.now() - 30_000))
+
+// 60 seconds ago — outside threshold → "1 minute ago"
+getRelativeTime(new Date(Date.now() - 60_000))
+```
+
+---
+
+## Multi-precision output
+
+With `precision: 2` or `precision: 3`, the output includes multiple time units joined by commas:
+
+```ts
+getRelativeTime(date, { precision: 1 }) // "2 days ago"
+getRelativeTime(date, { precision: 2 }) // "2 days, 4 hours ago"
+getRelativeTime(date, { precision: 3 }) // "2 days, 4 hours, 12 minutes ago"
+```
+
+<Aside type="note">
+  All locale strings are produced by the native `Intl.RelativeTimeFormat` API — no locale data is bundled with the library.
+</Aside>

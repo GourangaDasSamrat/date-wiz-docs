@@ -1,0 +1,109 @@
+---
+title: Quick Start
+description: Go from zero to productive with date-wiz in under 2 minutes.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. **Install**
+
+   ```bash
+   npm install date-wiz
+   ```
+
+2. **Import what you need**
+
+   ```ts
+   import { wiz, format, getRelativeTime, parse, smartFormat } from 'date-wiz';
+   ```
+
+3. **Format a date**
+
+   ```ts
+   format(new Date(), 'DD MMMM YYYY')        // "15 March 2026"
+   format(new Date(), 'DD MMMM', 'bn-BD')    // "১৫ মার্চ"
+   format(new Date(), 'hh:mm A')             // "02:30 PM"
+   format(new Date(), 'LLL')                 // "March 15, 2026 at 2:30 PM"
+   ```
+
+4. **Get relative time**
+
+   ```ts
+   getRelativeTime(twoDaysAgo)                       // "2 days ago"
+   getRelativeTime(twoDaysAgo, { precision: 2 })     // "2 days, 4 hours ago"
+   getRelativeTime(nextWeek,   { locale: 'fr' })     // "dans 7 jours"
+   ```
+
+5. **Use the chainable API**
+
+   ```ts
+   const deadline = wiz(new Date())
+     .add(3, 'businessDays')
+     .setHour(17)
+     .format('LLL');
+   // → "March 19, 2026 at 5:00 PM"
+   ```
+
+</Steps>
+
+---
+
+## Common patterns
+
+### Countdown timer
+
+```ts
+import { getRelativeTime } from 'date-wiz';
+
+const launch = new Date('2026-12-31T00:00:00');
+console.log(getRelativeTime(launch));
+// → "in 9 months"
+```
+
+### Smart timestamps in a feed
+
+```ts
+import { smartFormat } from 'date-wiz';
+
+posts.map(post => ({
+  ...post,
+  displayDate: smartFormat(post.createdAt),
+  // → "Today at 9:42 AM" | "Yesterday at 3:00 PM" | "Oct 12, 2022"
+}));
+```
+
+### Business day deadline
+
+```ts
+import { addBusinessDays } from 'date-wiz';
+
+const slaDeadline = addBusinessDays(new Date(), 5, {
+  holidays: ['2026-12-25', '2026-01-01'],
+});
+```
+
+### Parse a user-typed date
+
+```ts
+import { parse, format } from 'date-wiz';
+
+const d = parse(userInput); // "next_monday", "+2d", "15-05-2024" — all work
+if (d) {
+  console.log(format(d, 'LL')); // "March 16, 2026"
+}
+```
+
+---
+
+<Aside type="tip">
+  For the smallest bundle, import functions from their sub-paths:
+
+  ```ts
+  import { format }          from 'date-wiz/format';
+  import { getRelativeTime } from 'date-wiz/relative';
+  ```
+
+  See the [Tree-Shaking guide](/date-wiz-docs/guides/tree-shaking) for details.
+</Aside>

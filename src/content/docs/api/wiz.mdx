@@ -1,0 +1,192 @@
+---
+title: wiz() — Chainable API
+description: Create an immutable, chainable date-wiz instance for fluent date manipulation.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Signature
+
+```ts
+function wiz(input?: DateInput): WizInstance
+```
+
+Returns a `WizInstance` — an immutable wrapper around a `Date` that exposes every date-wiz operation as a chainable method.
+
+## Creating an instance
+
+```ts
+import { wiz } from 'date-wiz';
+
+wiz()                    // wraps the current time
+wiz(new Date())          // wraps a Date object
+wiz(1715781007000)       // wraps a Unix timestamp
+wiz('2024-05-15')        // wraps a date string
+```
+
+---
+
+## Instance methods
+
+### `.add(amount, unit)` → `WizInstance`
+
+Add a duration. Returns a **new** instance — the original is not mutated.
+
+```ts
+wiz(new Date()).add(5, 'days')
+wiz(new Date()).add(2, 'hours')
+wiz(new Date()).add(1, 'businessDays')
+```
+
+### `.subtract(amount, unit)` → `WizInstance`
+
+Subtract a duration. Returns a **new** instance.
+
+```ts
+wiz(new Date()).subtract(3, 'weeks')
+wiz(new Date()).subtract(1, 'months')
+```
+
+### `.setHour(hour)` → `WizInstance`
+
+Set the hour (0–23). Returns a **new** instance.
+
+```ts
+wiz(new Date()).setHour(9)   // 09:xx:xx
+wiz(new Date()).setHour(17)  // 17:xx:xx
+```
+
+### `.setMinute(minute)` → `WizInstance`
+
+Set the minute (0–59). Returns a **new** instance.
+
+```ts
+wiz(new Date()).setMinute(30)
+```
+
+### `.format(token?, locale?)` → `string`
+
+Format the wrapped date. See [`format()`](/date-wiz-docs/api/format) for the full token reference.
+
+```ts
+wiz(new Date()).format('YYYY-MM-DD')
+wiz(new Date()).format('DD MMMM', 'bn-BD')
+wiz(new Date()).format('LLL', 'en')
+```
+
+### `.smartFormat(options?)` → `string`
+
+Context-aware formatting. See [`smartFormat()`](/date-wiz-docs/api/smart-format).
+
+```ts
+wiz(new Date()).smartFormat()
+// → "Today at 2:30 PM"
+```
+
+### `.relative(options?)` → `string`
+
+Relative time string. See [`getRelativeTime()`](/date-wiz-docs/api/relative).
+
+```ts
+wiz(new Date(Date.now() - 60_000)).relative()
+// → "1 minute ago"
+
+wiz(deadline).relative({ locale: 'fr', precision: 2 })
+```
+
+### `.toDate()` → `Date`
+
+Unwrap to a plain JavaScript `Date`.
+
+```ts
+const d: Date = wiz(new Date()).add(1, 'days').toDate();
+```
+
+### `.toISO()` → `string`
+
+Return an ISO 8601 string.
+
+```ts
+wiz(new Date()).toISO()
+// → "2026-03-15T14:30:00.000Z"
+```
+
+### `.valueOf()` → `number`
+
+Return the Unix millisecond timestamp. Also called implicitly when using `+` or comparison operators.
+
+```ts
+wiz(new Date()).valueOf()  // e.g. 1710504600000
++wiz(new Date())           // same thing
+```
+
+### `.date` (property) → `Date`
+
+Read-only. Returns an immutable clone of the underlying date.
+
+```ts
+const w = wiz(new Date('2024-01-01'));
+console.log(w.date.getFullYear()); // 2024
+```
+
+---
+
+## Chaining examples
+
+### SLA deadline
+
+```ts
+import { wiz } from 'date-wiz';
+
+const deadline = wiz(new Date())
+  .add(5, 'businessDays')
+  .setHour(17)
+  .setMinute(0)
+  .format('LLL');
+// → "March 21, 2026 at 5:00 PM"
+```
+
+### Relative time for a future event
+
+```ts
+const event = wiz(new Date('2026-12-31'))
+  .setHour(23)
+  .setMinute(59)
+  .relative({ locale: 'en' });
+// → "in 9 months"
+```
+
+### Immutability proof
+
+```ts
+const base = wiz(new Date('2024-01-01'));
+
+const futureA = base.add(10, 'days');
+const futureB = base.add(20, 'days');
+
+console.log(base.toISO());    // "2024-01-01T..." — unchanged
+console.log(futureA.toISO()); // "2024-01-11T..."
+console.log(futureB.toISO()); // "2024-01-21T..."
+```
+
+---
+
+## Duration units
+
+All `.add()` and `.subtract()` calls accept both long and short unit names:
+
+| Long name | Short | Meaning |
+|---|---|---|
+| `milliseconds` | `ms` | Milliseconds |
+| `seconds` | `s` | Seconds |
+| `minutes` | `m` | Minutes |
+| `hours` | `h` | Hours |
+| `days` | `d` | Days |
+| `weeks` | `w` | Weeks |
+| `months` | `M` | Months (note: uppercase) |
+| `years` | `y` | Years |
+| `businessDays` | — | Business days (skips weekends) |
+
+<Aside type="note">
+  `months` uses a capital `M` to distinguish it from `minutes` (`m`). This is consistent with most date libraries.
+</Aside>

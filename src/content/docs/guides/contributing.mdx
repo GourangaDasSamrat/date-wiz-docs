@@ -1,0 +1,73 @@
+---
+title: Contributing
+description: How to contribute to date-wiz — setup, workflow, and standards.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Thank you for considering a contribution! Here's everything you need.
+
+---
+
+## Development setup
+
+<Steps>
+1. Fork [GourangaDasSamrat/date-wiz](https://github.com/GourangaDasSamrat/date-wiz) on GitHub.
+
+2. Clone your fork and install dependencies:
+   ```bash
+   git clone https://github.com/<your-username>/date-wiz.git
+   cd date-wiz
+   npm install
+   ```
+
+3. Verify everything is green:
+   ```bash
+   npm test && npm run build
+   ```
+</Steps>
+
+---
+
+## Workflow
+
+```bash
+npm test              # run 107 tests
+npm test -- --watch   # watch mode
+npm run build         # compile ESM + CJS + types
+npm test -- --coverage  # view coverage report
+```
+
+---
+
+## Commit convention
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat(parse): support MM/DD/YYYY locale format
+fix(relative): handle precision:3 with future dates
+docs: update README token table
+chore: rename post-build.js to post-build.mjs
+```
+
+---
+
+## Pull request checklist
+
+- [ ] Tests pass on Node 18, 20, and 22
+- [ ] New public functions have tests with 100% coverage
+- [ ] `README.md` updated if the public API changed
+- [ ] No new runtime dependencies introduced
+
+---
+
+## Reporting bugs
+
+Open a [GitHub issue](https://github.com/GourangaDasSamrat/date-wiz/issues) with:
+
+- `date-wiz` version and Node.js version
+- A minimal code snippet that reproduces the problem
+- Expected output vs. actual output
+
+For security vulnerabilities, email **gouranga.samrat@gmail.com** privately instead.

@@ -1,0 +1,130 @@
+---
+title: Internationalization (i18n)
+description: Use date-wiz with any locale — powered by the native Intl API with no locale files bundled.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+date-wiz delegates all locale-sensitive output to the native **`Intl`** API (`Intl.DateTimeFormat` and `Intl.RelativeTimeFormat`). This means:
+
+- **Zero locale data bundled** — the library stays under 2 KB gzipped regardless of how many languages you use.
+- **Automatic script support** — Bengali numerals, Arabic right-to-left, Japanese kanji — all handled by the runtime.
+- **100+ locales** — anything your browser or Node.js runtime supports.
+
+---
+
+## Setting a locale
+
+Every function accepts a `locale` option (BCP 47 string):
+
+```ts
+import { format, getRelativeTime, smartFormat } from 'date-wiz';
+
+const d = new Date('2024-05-15T14:30:00');
+
+// English (default)
+format(d, 'DD MMMM YYYY', 'en')       // "15 May 2024"
+format(d, 'dddd', 'en')               // "Wednesday"
+
+// Bengali (Bangladesh)
+format(d, 'DD MMMM YYYY', 'bn-BD')    // "১৫ মে ২০২৪"
+format(d, 'DD MMMM', 'bn-BD')         // "১৫ মে"
+
+// Arabic
+format(d, 'DD MMMM YYYY', 'ar')       // "١٥ مايو ٢٠٢٤"
+
+// French
+format(d, 'DD MMMM YYYY', 'fr')       // "15 mai 2024"
+
+// Japanese
+format(d, 'MMMM', 'ja')              // "5月"
+format(d, 'dddd', 'ja')              // "水曜日"
+
+// German
+format(d, 'dddd, DD MMMM', 'de')     // "Mittwoch, 15 Mai"
+
+// Spanish
+format(d, 'DD MMMM YYYY', 'es')       // "15 mayo 2024"
+```
+
+---
+
+## Relative time in any locale
+
+```ts
+const fiveMinutesAgo = new Date(Date.now() - 5 * 60_000);
+
+getRelativeTime(fiveMinutesAgo, { locale: 'en' })     // "5 minutes ago"
+getRelativeTime(fiveMinutesAgo, { locale: 'fr' })     // "il y a 5 minutes"
+getRelativeTime(fiveMinutesAgo, { locale: 'de' })     // "vor 5 Minuten"
+getRelativeTime(fiveMinutesAgo, { locale: 'bn-BD' })  // "৫ মিনিট আগে"
+getRelativeTime(fiveMinutesAgo, { locale: 'ar' })     // "قبل ٥ دقائق"
+getRelativeTime(fiveMinutesAgo, { locale: 'ja' })     // "5分前"
+getRelativeTime(fiveMinutesAgo, { locale: 'zh' })     // "5分钟前"
+getRelativeTime(fiveMinutesAgo, { locale: 'hi' })     // "5 मिनट पहले"
+getRelativeTime(fiveMinutesAgo, { locale: 'pt-BR' })  // "há 5 minutos"
+getRelativeTime(fiveMinutesAgo, { locale: 'ko' })     // "5분 전"
+```
+
+---
+
+## Locale compound tokens
+
+The `LLL`, `LL`, `L`, and `LT` tokens fully respect the locale:
+
+```ts
+format(d, 'LLL', 'en')     // "May 15, 2024 at 2:30 PM"
+format(d, 'LLL', 'fr')     // "15 mai 2024 à 14:30"
+format(d, 'LLL', 'de')     // "15. Mai 2024 um 14:30"
+format(d, 'LLL', 'ar')     // "١٥ مايو ٢٠٢٤ في ٢:٣٠ م"
+format(d, 'LLL', 'ja')     // "2024年5月15日 14:30"
+```
+
+---
+
+## Smart format with custom labels
+
+`smartFormat` uses English labels by default ("Today at", "Yesterday at"). Override them for a fully localized UI:
+
+```ts
+import { smartFormat } from 'date-wiz';
+
+// Portuguese
+smartFormat(new Date(), {
+  locale: 'pt-BR',
+  labels: { todayAt: 'Hoje às', yesterdayAt: 'Ontem às' },
+})
+// → "Hoje às 14:30"
+
+// Bengali
+smartFormat(new Date(), {
+  locale: 'bn-BD',
+  labels: { todayAt: 'আজ', yesterdayAt: 'গতকাল' },
+})
+// → "আজ ২:৩০ PM"
+
+// French
+smartFormat(new Date(), {
+  locale: 'fr',
+  labels: { todayAt: "Aujourd'hui à", yesterdayAt: 'Hier à' },
+})
+```
+
+---
+
+## Runtime support
+
+| Environment | `Intl` support |
+|---|---|
+| Node.js ≥ 14 | ✅ Full ICU data included by default since Node 13 |
+| Modern browsers | ✅ [~98% global coverage](https://caniuse.com/internationalization) |
+| Deno | ✅ Full support |
+
+<Aside type="caution">
+  Some minimal Node.js builds (e.g. Alpine Docker images with `node:alpine`) ship with a stripped ICU dataset. If you see incorrect locale output, install the full ICU data:
+
+  ```bash
+  npm install full-icu
+  node --icu-data-dir=node_modules/full-icu your-script.js
+  ```
+</Aside>

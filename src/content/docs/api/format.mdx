@@ -1,0 +1,115 @@
+---
+title: format()
+description: Token-based date formatting with full i18n support via the native Intl API.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Signature
+
+```ts
+function format(
+  date: DateInput,
+  token?: FormatToken,
+  locale?: string,
+  opts?: FormatOptions,
+): string
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `date` | `Date \| string \| number` | — | The date to format |
+| `token` | `string` | `'YYYY-MM-DDTHH:mm:ss'` | Format string with tokens |
+| `locale` | `string` | System locale | BCP 47 locale (e.g. `'bn-BD'`, `'fr'`) |
+| `opts.fallback` | `string \| null` | `'Invalid Date'` | Returned when the date is invalid |
+
+## Examples
+
+```ts
+import { format } from 'date-wiz';
+
+const d = new Date('2024-05-15T14:30:07');
+
+format(d, 'YYYY-MM-DD')           // "2024-05-15"
+format(d, 'DD MMMM YYYY')         // "15 May 2024"
+format(d, 'DD MMMM YYYY', 'en')   // "15 May 2024"
+format(d, 'DD MMMM', 'bn-BD')     // "১৫ মে"
+format(d, 'DD MMMM', 'ar')        // "١٥ مايو"
+format(d, 'hh:mm A')              // "02:30 PM"
+format(d, 'HH:mm:ss')             // "14:30:07"
+format(d, 'dddd, DD MMM')         // "Wednesday, 15 May"
+format(d, 'x')                    // "1715781007000"  (unix ms)
+format(d, 'X')                    // "1715781007"     (unix seconds)
+
+// Locale-aware compound tokens
+format(d, 'LLL', 'en')  // "May 15, 2024 at 2:30 PM"
+format(d, 'LL',  'en')  // "May 15, 2024"
+format(d, 'L',   'en')  // "5/15/2024"
+format(d, 'LT',  'en')  // "2:30 PM"
+
+// Invalid date with fallback
+format('bad', 'YYYY', undefined, { fallback: 'N/A' }) // "N/A"
+format('bad', 'YYYY', undefined, { fallback: null })  // ""
+```
+
+---
+
+## Token reference
+
+### Date tokens
+
+| Token | Output | Example |
+|---|---|---|
+| `YYYY` | 4-digit year | `2024` |
+| `YY` | 2-digit year | `24` |
+| `MMMM` | Full month name (i18n) | `May` |
+| `MMM` | Short month name (i18n) | `May` |
+| `MM` | Month, zero-padded | `05` |
+| `M` | Month, no padding | `5` |
+| `DD` | Day of month, zero-padded | `05` |
+| `D` | Day of month, no padding | `5` |
+| `dddd` | Full weekday name (i18n) | `Wednesday` |
+| `ddd` | Short weekday name (i18n) | `Wed` |
+
+### Time tokens
+
+| Token | Output | Example |
+|---|---|---|
+| `HH` | 24h hours, zero-padded | `14` |
+| `H` | 24h hours | `14` |
+| `hh` | 12h hours, zero-padded | `02` |
+| `h` | 12h hours | `2` |
+| `mm` | Minutes, zero-padded | `30` |
+| `ss` | Seconds, zero-padded | `07` |
+| `A` | AM/PM | `PM` |
+| `a` | am/pm | `pm` |
+
+### Locale compound tokens (via `Intl`)
+
+| Token | Output |
+|---|---|
+| `LLL` | Full locale date+time: `May 15, 2024 at 2:30 PM` |
+| `LL` | Locale date: `May 15, 2024` |
+| `L` | Locale short date: `5/15/2024` |
+| `LT` | Locale time: `2:30 PM` |
+
+### Unix timestamps
+
+| Token | Output |
+|---|---|
+| `x` | Unix milliseconds: `1715781007000` |
+| `X` | Unix seconds: `1715781007` |
+
+---
+
+## Behaviour notes
+
+- **Token matching is longest-first.** `MMMM` is matched before `MMM`, `MM`, and `M`. Literal characters in the format string that don't match any token are passed through unchanged.
+- **Month and weekday names** are always produced by `Intl.DateTimeFormat` — they automatically use the correct locale script (Arabic, Bengali, Japanese, etc.).
+- **Locale compound tokens** (`LLL`, `LL`, `L`, `LT`) delegate entirely to `Intl.DateTimeFormat` and always produce output appropriate for the given locale.
+
+<Aside type="caution">
+  Tokens are **case-sensitive**. `MM` is the month; `mm` is minutes. `YYYY` is the 4-digit year; `YY` is 2-digit.
+</Aside>

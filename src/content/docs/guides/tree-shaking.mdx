@@ -1,0 +1,77 @@
+---
+title: Tree-Shaking
+description: Import only what you use for the smallest possible bundle.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+date-wiz is fully tree-shakable. Every module is an independent ES Module with no side effects, so any modern bundler (Vite, webpack 5, Rollup, esbuild, Parcel) will eliminate unused code automatically.
+
+---
+
+## Sub-path imports (recommended)
+
+Import directly from a sub-path to give your bundler the clearest possible signal:
+
+```ts
+import { format }           from 'date-wiz/format';    // ~1.2 KB gzipped
+import { getRelativeTime }  from 'date-wiz/relative';  // ~1.4 KB gzipped
+import { smartFormat }      from 'date-wiz/smart';     // ~0.8 KB gzipped
+import { parse }            from 'date-wiz/parse';     // ~1.5 KB gzipped
+import { addBusinessDays }  from 'date-wiz/business';  // ~1.2 KB gzipped
+```
+
+---
+
+## Root import (also tree-shakable)
+
+Importing from the root is equally tree-shakable when your bundler supports `"exports"` maps (Vite, Rollup, webpack 5+):
+
+```ts
+// Only format() and getRelativeTime() end up in your bundle
+import { format, getRelativeTime } from 'date-wiz';
+```
+
+<Aside type="note">
+  If you use **Create React App** or another webpack 4 setup that doesn't respect `"exports"` maps, prefer sub-path imports for reliable tree-shaking.
+</Aside>
+
+---
+
+## Module sizes (gzipped)
+
+| Module | Sub-path | Gzipped |
+|---|---|---|
+| `format` | `date-wiz/format` | ~1.2 KB |
+| `relative` | `date-wiz/relative` | ~1.4 KB |
+| `smart` | `date-wiz/smart` | ~0.8 KB |
+| `parse` | `date-wiz/parse` | ~1.5 KB |
+| `business` | `date-wiz/business` | ~1.2 KB |
+| Everything | `date-wiz` | ~6.9 KB |
+
+---
+
+## Checking your bundle
+
+Use [Bundlephobia](https://bundlephobia.com/package/date-wiz) to estimate your impact, or inspect your Vite/Rollup bundle with:
+
+```bash
+# Vite
+npx vite build --mode analyze
+
+# Rollup
+npx rollup-plugin-visualizer
+```
+
+---
+
+## `"sideEffects": false`
+
+date-wiz sets `"sideEffects": false` in `package.json`, which tells bundlers it's safe to discard any module that isn't imported. This enables aggressive dead-code elimination even in non-ESM contexts.
+
+```json
+{
+  "name": "date-wiz",
+  "sideEffects": false
+}
+```

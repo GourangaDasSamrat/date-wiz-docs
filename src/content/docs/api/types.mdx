@@ -1,0 +1,173 @@
+---
+title: TypeScript Types
+description: Complete reference for all exported interfaces and type aliases in date-wiz.
+---
+
+All types are exported from the root `'date-wiz'` and from `'date-wiz/format'`, `'date-wiz/relative'`, etc. as appropriate. No separate `@types/` package is needed.
+
+```ts
+import type {
+  DateInput,
+  DurationUnit,
+  FormatToken,
+  FormatOptions,
+  RelativeTimeOptions,
+  SmartFormatOptions,
+  SmartFormatLabels,
+  BusinessDayOptions,
+  WorkingHoursOptions,
+  ParseOptions,
+  WizInstance,
+  InvalidDateFallback,
+} from 'date-wiz';
+```
+
+---
+
+## DateInput
+
+```ts
+type DateInput = Date | string | number;
+```
+
+Any value that can be coerced to a `Date`. Accepted by every function in date-wiz.
+
+---
+
+## DurationUnit
+
+```ts
+type DurationUnit =
+  | 'milliseconds' | 'ms'
+  | 'seconds'      | 's'
+  | 'minutes'      | 'm'
+  | 'hours'        | 'h'
+  | 'days'         | 'd'
+  | 'weeks'        | 'w'
+  | 'months'       | 'M'
+  | 'years'        | 'y'
+  | 'businessDays';
+```
+
+Used by `add()`, `subtract()`, `diff()`, and the chainable `wiz()` methods.
+
+---
+
+## InvalidDateFallback
+
+```ts
+type InvalidDateFallback = string | null;
+```
+
+---
+
+## FormatOptions
+
+```ts
+interface FormatOptions {
+  /** BCP 47 locale string. Defaults to system locale. */
+  locale?: string;
+  /** Returned when the date is invalid. Defaults to 'Invalid Date'. */
+  fallback?: InvalidDateFallback;
+}
+```
+
+---
+
+## RelativeTimeOptions
+
+```ts
+interface RelativeTimeOptions {
+  /** BCP 47 locale. Defaults to 'en'. */
+  locale?: string;
+  /** Number of time units in the output. Defaults to 1. */
+  precision?: 1 | 2 | 3;
+  /** Seconds threshold for "just now". Defaults to 45. */
+  justNowThreshold?: number;
+  /** Fallback for invalid dates. */
+  fallback?: InvalidDateFallback;
+  /** Reference date to compare against. Defaults to new Date(). */
+  baseDate?: DateInput;
+}
+```
+
+---
+
+## SmartFormatOptions
+
+```ts
+interface SmartFormatOptions {
+  locale?: string;
+  fallback?: InvalidDateFallback;
+  labels?: Partial<SmartFormatLabels>;
+}
+
+interface SmartFormatLabels {
+  todayAt: string;      // default: "Today at"
+  yesterdayAt: string;  // default: "Yesterday at"
+}
+```
+
+---
+
+## BusinessDayOptions
+
+```ts
+interface BusinessDayOptions {
+  /**
+   * ISO 8601 date strings (YYYY-MM-DD) of holidays to exclude.
+   * @example ['2024-12-25', '2024-01-01']
+   */
+  holidays?: string[];
+}
+```
+
+---
+
+## WorkingHoursOptions
+
+```ts
+interface WorkingHoursOptions {
+  /** "HH:MM" 24h start time. Defaults to "09:00". */
+  start?: string;
+  /** "HH:MM" 24h end time (exclusive). Defaults to "17:00". */
+  end?: string;
+  /** Days considered working (0=Sun … 6=Sat). Defaults to [1,2,3,4,5]. */
+  workDays?: number[];
+}
+```
+
+---
+
+## ParseOptions
+
+```ts
+interface ParseOptions {
+  /** Locale hint for ambiguous inputs. */
+  locale?: string;
+  /** Returned if parsing fails. Defaults to null. */
+  fallback?: InvalidDateFallback;
+}
+```
+
+---
+
+## WizInstance
+
+The object returned by `wiz()`:
+
+```ts
+interface WizInstance {
+  readonly date: Date;
+  add(amount: number, unit: DurationUnit): WizInstance;
+  subtract(amount: number, unit: DurationUnit): WizInstance;
+  setHour(hour: number): WizInstance;
+  setMinute(minute: number): WizInstance;
+  format(token?: string, locale?: string): string;
+  smartFormat(options?: SmartFormatOptions): string;
+  relative(options?: RelativeTimeOptions): string;
+  toDate(): Date;
+  toISO(): string;
+  valueOf(): number;
+}
+```

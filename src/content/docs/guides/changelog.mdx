@@ -1,0 +1,31 @@
+---
+title: Changelog
+description: Release history for date-wiz.
+---
+
+All notable changes are documented here. date-wiz follows [Semantic Versioning](https://semver.org).
+
+---
+
+## v1.0.0 — 2026-03-15
+
+Initial public release. 🎉
+
+### Added
+
+- **`format()`** — token-based formatting with 20+ tokens and full `Intl` i18n
+- **`getRelativeTime()`** — relative time strings with precision levels (1–3 units) and locale support
+- **`smartFormat()`** — context-aware labels (Today, Yesterday, weekday, short date, long date)
+- **`parse()`** — intelligent parsing of 15+ formats including compact, regional, natural language, and relative shorthands (`+2d`, `next_monday`)
+- **`wiz()`** — immutable, chainable factory wrapping all operations
+- **Arithmetic utilities** — `add`, `subtract`, `diff`, `isBefore`, `isAfter`, `isSameDay`, `clampDate`, `startOf`, `endOf`
+- **Business day utilities** — `addBusinessDays`, `subtractBusinessDays`, `countBusinessDays`, `isWithinWorkingHours`, `checkIsBusinessDay` with holiday support
+- **Three output formats** — ESM, CJS, and TypeScript declaration files
+- **Sub-path exports** — `date-wiz/format`, `date-wiz/relative`, `date-wiz/business`, `date-wiz/parse`
+- **Zero runtime dependencies**
+- **107 tests** across 7 test suites, 100% function coverage
+- MIT license
+
+---
+
+For the full commit history, see the [GitHub releases page](https://github.com/GourangaDasSamrat/date-wiz/releases).

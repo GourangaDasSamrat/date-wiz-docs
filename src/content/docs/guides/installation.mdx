@@ -1,0 +1,95 @@
+---
+title: Installation
+description: Install date-wiz via npm, yarn, pnpm, or load it from a CDN.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+## Package managers
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install date-wiz
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add date-wiz
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add date-wiz
+    ```
+  </TabItem>
+  <TabItem label="bun">
+    ```bash
+    bun add date-wiz
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+  date-wiz has **zero runtime dependencies**. The only thing that gets installed is the library itself.
+</Aside>
+
+---
+
+## Requirements
+
+| Environment | Minimum version |
+|---|---|
+| Node.js | 14.0.0 |
+| TypeScript | 4.7 (for `exports` map support) |
+| Browser | Any browser with `Intl.RelativeTimeFormat` ([~96% global coverage](https://caniuse.com/intl-relativetimeformat)) |
+
+---
+
+## CDN (no build step)
+
+Load date-wiz directly in a `<script>` tag via unpkg or jsDelivr:
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/date-wiz/dist/umd/index.js"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/date-wiz/dist/umd/index.js"></script>
+
+<script>
+  const { format, getRelativeTime } = dateWiz;
+  console.log(format(new Date(), 'DD MMM YYYY')); // "15 Mar 2026"
+</script>
+```
+
+---
+
+## Verify the installation
+
+```ts
+import { format } from 'date-wiz';
+
+console.log(format(new Date(), 'YYYY-MM-DD'));
+// → "2026-03-15"
+```
+
+If this prints today's date, you're good to go.
+
+---
+
+## TypeScript setup
+
+date-wiz ships its own `.d.ts` files — no separate `@types/` package is needed. If your `tsconfig.json` uses `"moduleResolution": "bundler"` or `"node16"`, sub-path imports will resolve automatically:
+
+```ts
+import { format }          from 'date-wiz/format';   // ✅
+import { getRelativeTime } from 'date-wiz/relative';  // ✅
+import { addBusinessDays } from 'date-wiz/business';  // ✅
+```
+
+For older `"moduleResolution": "node"` setups, import from the root instead:
+
+```ts
+import { format, getRelativeTime, addBusinessDays } from 'date-wiz';
+```

@@ -1,0 +1,72 @@
+---
+title: smartFormat()
+description: Context-aware date formatting that automatically picks the most readable label.
+---
+
+## Signature
+
+```ts
+function smartFormat(
+  date: DateInput,
+  options?: SmartFormatOptions,
+): string
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `date` | `DateInput` | — | The date to format |
+| `options.locale` | `string` | System locale | BCP 47 locale |
+| `options.fallback` | `string \| null` | `'Invalid Date'` | Returned for invalid input |
+| `options.labels.todayAt` | `string` | `'Today at'` | Label for today's dates |
+| `options.labels.yesterdayAt` | `string` | `'Yesterday at'` | Label for yesterday's dates |
+
+## Output rules
+
+| When the date is… | Output format | Example |
+|---|---|---|
+| Today | `"Today at {time}"` | `"Today at 4:30 PM"` |
+| Yesterday | `"Yesterday at {time}"` | `"Yesterday at 11:00 AM"` |
+| Within the last 6 days | `"{Weekday} at {time}"` | `"Wednesday at 2:00 PM"` |
+| This calendar year | `"{Mon} {D}"` | `"Oct 12"` |
+| Any other year | `"{Mon} {D}, {YYYY}"` | `"Oct 12, 2022"` |
+
+## Examples
+
+```ts
+import { smartFormat } from 'date-wiz';
+
+smartFormat(new Date())                          // "Today at 2:30 PM"
+smartFormat(new Date(Date.now() - 86_400_000))  // "Yesterday at 11:00 AM"
+smartFormat(new Date(Date.now() - 3*86400000))  // "Thursday at 9:00 AM"
+smartFormat(new Date(new Date().getFullYear(), 0, 5))  // "Jan 5"
+smartFormat(new Date('2022-10-12'))              // "Oct 12, 2022"
+
+// Localized
+smartFormat(new Date(), { locale: 'fr' })        // "Today at 14:30"
+
+// Custom labels (great for localization)
+smartFormat(new Date(), {
+  locale: 'pt-BR',
+  labels: { todayAt: 'Hoje às', yesterdayAt: 'Ontem às' },
+})
+// → "Hoje às 14:30"
+
+// Bengali locale
+smartFormat(new Date(), { locale: 'bn-BD' })     // "Today at ২:৩০ PM"
+
+// Invalid date with fallback
+smartFormat('not a date', { fallback: '—' })     // "—"
+```
+
+## Use case: activity feeds
+
+`smartFormat` is designed for UI contexts where you want a single function call that always returns the most human-readable label without configuration:
+
+```ts
+// In a React component
+function FeedItem({ createdAt }: { createdAt: Date }) {
+  return <time>{smartFormat(createdAt)}</time>;
+}
+```

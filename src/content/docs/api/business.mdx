@@ -1,0 +1,201 @@
+---
+title: Business Days
+description: addBusinessDays, subtractBusinessDays, countBusinessDays, isWithinWorkingHours, checkIsBusinessDay.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Import
+
+```ts
+import {
+  addBusinessDays,
+  subtractBusinessDays,
+  countBusinessDays,
+  isWithinWorkingHours,
+  checkIsBusinessDay,
+} from 'date-wiz';
+// or
+import { ... } from 'date-wiz/business';
+```
+
+---
+
+## addBusinessDays()
+
+```ts
+function addBusinessDays(
+  date: DateInput,
+  days: number,
+  options?: BusinessDayOptions,
+): Date
+```
+
+Add `n` business days, automatically skipping weekends and any specified holidays.
+
+```ts
+import { addBusinessDays } from 'date-wiz';
+
+// Monday Jan 8 + 5 business days = Monday Jan 15
+addBusinessDays(new Date('2024-01-08'), 5)
+
+// With public holidays excluded
+addBusinessDays(new Date('2024-01-08'), 5, {
+  holidays: ['2024-01-09', '2024-12-25'],
+})
+
+// Negative value subtracts business days
+addBusinessDays(new Date('2024-01-15'), -5) // → Monday Jan 8
+```
+
+---
+
+## subtractBusinessDays()
+
+```ts
+function subtractBusinessDays(
+  date: DateInput,
+  days: number,
+  options?: BusinessDayOptions,
+): Date
+```
+
+Convenience wrapper for `addBusinessDays(date, -days, options)`.
+
+```ts
+// Friday Jan 12 - 1 business day = Thursday Jan 11
+subtractBusinessDays(new Date('2024-01-12'), 1)
+```
+
+---
+
+## countBusinessDays()
+
+```ts
+function countBusinessDays(
+  from: DateInput,
+  to: DateInput,
+  options?: BusinessDayOptions,
+): number
+```
+
+Count the business days between two dates. The start date is exclusive; the end date is inclusive.
+
+```ts
+// Monday Jan 8 → Friday Jan 12 = 4 business days (Mon is excluded)
+countBusinessDays(
+  new Date('2024-01-08'),
+  new Date('2024-01-12'),
+) // → 4
+
+// Exclude a holiday
+countBusinessDays(
+  new Date('2024-01-08'),
+  new Date('2024-01-12'),
+  { holidays: ['2024-01-09'] },
+) // → 3
+
+// Negative when from > to
+countBusinessDays(
+  new Date('2024-01-12'),
+  new Date('2024-01-08'),
+) // → -4
+```
+
+---
+
+## isWithinWorkingHours()
+
+```ts
+function isWithinWorkingHours(
+  date: DateInput,
+  options?: WorkingHoursOptions,
+): boolean
+```
+
+Returns `true` when the given date falls within the configured working hours on a working day.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `start` | `string` | `'09:00'` | Start time in `HH:MM` (24h) |
+| `end` | `string` | `'17:00'` | End time in `HH:MM` (24h), exclusive |
+| `workDays` | `number[]` | `[1,2,3,4,5]` | Working days (0=Sun … 6=Sat) |
+
+```ts
+import { isWithinWorkingHours } from 'date-wiz';
+
+// Monday 10 AM — within 9–17 window
+isWithinWorkingHours(
+  new Date('2024-01-08T10:00:00'),
+  { start: '09:00', end: '17:00' },
+) // → true
+
+// Saturday — weekend
+isWithinWorkingHours(new Date('2024-01-13T10:00:00')) // → false
+
+// After hours
+isWithinWorkingHours(
+  new Date('2024-01-08T18:30:00'),
+  { start: '09:00', end: '18:00' },
+) // → false
+
+// Custom work week (Mon–Sat)
+isWithinWorkingHours(new Date(), {
+  start: '08:00',
+  end: '20:00',
+  workDays: [1, 2, 3, 4, 5, 6],
+})
+```
+
+<Aside type="note">
+  The `end` time is **exclusive**. A date at exactly `17:00:00` returns `false` when `end` is `'17:00'`.
+</Aside>
+
+---
+
+## checkIsBusinessDay()
+
+```ts
+function checkIsBusinessDay(
+  date: DateInput,
+  options?: BusinessDayOptions,
+): boolean
+```
+
+Returns `true` when the given date is a working day (Mon–Fri, not a holiday).
+
+```ts
+checkIsBusinessDay(new Date('2024-01-08'))  // Monday → true
+checkIsBusinessDay(new Date('2024-01-13'))  // Saturday → false
+
+// With holidays
+checkIsBusinessDay(new Date('2024-01-08'), {
+  holidays: ['2024-01-08'],
+}) // → false (it's a holiday)
+```
+
+---
+
+## BusinessDayOptions
+
+```ts
+interface BusinessDayOptions {
+  /**
+   * ISO date strings (YYYY-MM-DD) of public holidays to exclude.
+   * @example ['2024-12-25', '2024-01-01']
+   */
+  holidays?: string[];
+}
+```
+
+<Aside type="tip">
+  The `workDays` option in `isWithinWorkingHours` lets you support non-standard work weeks. For example, some Middle Eastern countries use Sunday–Thursday as their working week:
+
+  ```ts
+  isWithinWorkingHours(date, {
+    workDays: [0, 1, 2, 3, 4], // Sun–Thu
+    start: '08:00',
+    end: '17:00',
+  })
+  ```
+</Aside>

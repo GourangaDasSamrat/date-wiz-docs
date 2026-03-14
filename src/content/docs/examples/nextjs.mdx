@@ -1,0 +1,132 @@
+---
+title: Next.js
+description: Using date-wiz in Next.js with App Router, Server Components, and client hooks.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Installation
+
+```bash
+npm install date-wiz
+```
+
+date-wiz works in all Next.js rendering modes: Server Components, Client Components, API Routes, and Edge Runtime.
+
+---
+
+## Server Component — no hydration needed
+
+Because date-wiz has zero dependencies and uses native APIs, it runs perfectly in React Server Components:
+
+```tsx
+// app/posts/[id]/page.tsx
+import { format, smartFormat } from 'date-wiz';
+
+async function PostPage({ params }: { params: { id: string } }) {
+  const post = await getPost(params.id);
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <time dateTime={post.publishedAt.toISOString()}>
+        {smartFormat(post.publishedAt)}
+      </time>
+      <p>Published: {format(post.publishedAt, 'DD MMMM YYYY')}</p>
+    </article>
+  );
+}
+```
+
+---
+
+## Client Component — live relative time
+
+```tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getRelativeTime } from 'date-wiz';
+
+export function LiveRelativeTime({
+  date,
+  locale = 'en',
+}: {
+  date: Date;
+  locale?: string;
+}) {
+  const [label, setLabel] = useState('');
+
+  useEffect(() => {
+    // Set immediately on mount (avoids SSR mismatch)
+    setLabel(getRelativeTime(date, { locale }));
+    const id = setInterval(() => {
+      setLabel(getRelativeTime(date, { locale }));
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [date, locale]);
+
+  return (
+    <time suppressHydrationWarning dateTime={date.toISOString()}>
+      {label}
+    </time>
+  );
+}
+```
+
+<Aside type="tip">
+  Use `suppressHydrationWarning` on the `<time>` element when rendering relative times in Client Components — the server-rendered string will differ slightly from the client-rendered one (the server renders at request time, the client at mount time).
+</Aside>
+
+---
+
+## API Route — locale-aware response
+
+```ts
+// app/api/events/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { format, getRelativeTime } from 'date-wiz';
+
+export async function GET(req: NextRequest) {
+  const locale = req.headers.get('accept-language')?.split(',')[0] ?? 'en';
+  const events = await getUpcomingEvents();
+
+  return NextResponse.json(
+    events.map(e => ({
+      ...e,
+      startsAt: format(e.startsAt, 'LLL', locale),
+      startsIn: getRelativeTime(e.startsAt, { locale }),
+    })),
+  );
+}
+```
+
+---
+
+## Middleware — timezone-aware formatting
+
+```ts
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(req: NextRequest) {
+  const response = NextResponse.next();
+  // Forward the user's locale to downstream RSCs via a header
+  const locale = req.headers.get('accept-language')?.split(',')[0] ?? 'en';
+  response.headers.set('x-user-locale', locale);
+  return response;
+}
+```
+
+Then read it in a Server Component:
+
+```tsx
+import { headers } from 'next/headers';
+import { format } from 'date-wiz';
+
+async function EventCard({ event }: { event: Event }) {
+  const locale = (await headers()).get('x-user-locale') ?? 'en';
+  return <p>{format(event.date, 'LLL', locale)}</p>;
+}
+```

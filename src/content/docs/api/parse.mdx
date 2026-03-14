@@ -1,0 +1,130 @@
+---
+title: parse()
+description: Intelligently parse 15+ date formats and relative shorthands without a format string.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Signature
+
+```ts
+function parse(
+  input: DateInput,
+  options?: ParseOptions,
+): Date | null
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `input` | `DateInput` | — | String, Date, or number to parse |
+| `options.fallback` | `string \| null` | `null` | Returned when parsing fails |
+| `options.locale` | `string` | System locale | Locale hint for ambiguous formats |
+
+## Supported formats
+
+### ISO and numeric
+
+```ts
+import { parse } from 'date-wiz';
+
+parse('2024-05-15')         // ISO 8601 → Date(2024-05-15)
+parse('2024-05-15T14:30')  // ISO with time → Date(2024-05-15T14:30)
+parse('20240515')           // Compact YYYYMMDD → Date(2024-05-15)
+parse(1715781007000)        // Unix timestamp → Date
+parse(new Date())           // Pass-through → clone of input
+```
+
+### Regional formats
+
+```ts
+parse('15-05-2024')   // DD-MM-YYYY → Date(2024-05-15)
+parse('15/05/2024')   // DD/MM/YYYY → Date(2024-05-15)
+parse('2024/05/15')   // YYYY/MM/DD → Date(2024-05-15)
+```
+
+### Natural language
+
+```ts
+parse('May 15')         // → Date(current year, May 15)
+parse('May 15, 2024')   // → Date(2024-05-15)
+parse('15 May 2024')    // → Date(2024-05-15)
+```
+
+### Relative shorthands
+
+```ts
+// Offset from now
+parse('+2d')    // 2 days from now
+parse('-1w')    // 1 week ago
+parse('+3M')    // 3 months from now
+parse('-1y')    // 1 year ago
+parse('+4h')    // 4 hours from now
+parse('+30m')   // 30 minutes from now
+parse('-45s')   // 45 seconds ago
+parse('+500ms') // 500 milliseconds from now
+```
+
+| Unit symbol | Meaning |
+|---|---|
+| `ms` | Milliseconds |
+| `s` | Seconds |
+| `m` | Minutes |
+| `h` | Hours |
+| `d` | Days |
+| `w` | Weeks |
+| `M` | Months |
+| `y` | Years |
+
+### Named days
+
+```ts
+parse('next_monday')    // → next Monday from today
+parse('next_friday')    // → next Friday from today
+parse('last_monday')    // → most recent Monday
+parse('last_saturday')  // → most recent Saturday
+```
+
+Supported names: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
+
+---
+
+## Failure handling
+
+When `parse` cannot interpret the input, it returns `null` by default:
+
+```ts
+parse('not a date')           // → null
+parse('??/??/????')           // → null
+parse('not a date', {
+  fallback: 'Invalid',        // → "Invalid"  (note: typed as null in most cases)
+})
+```
+
+<Aside type="tip">
+  Always guard the result before using it:
+
+  ```ts
+  const d = parse(userInput);
+  if (d) {
+    console.log(format(d, 'LL'));
+  } else {
+    console.error('Could not parse date');
+  }
+  ```
+</Aside>
+
+---
+
+## Pattern priority
+
+Patterns are tried in this order — first match wins:
+
+1. Relative shorthand (`+2d`, `-1w`)
+2. Named day (`next_monday`, `last_friday`)
+3. Compact YYYYMMDD (`20240515`)
+4. Regional DD-MM-YYYY / DD/MM/YYYY
+5. Standard YYYY-MM-DD / YYYY/MM/DD
+6. Natural language (`May 15`, `May 15 2024`)
+7. Native `Date` constructor fallback

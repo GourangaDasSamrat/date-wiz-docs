@@ -1,0 +1,116 @@
+---
+title: Node.js
+description: Using date-wiz in Node.js scripts, APIs, and CLI tools.
+---
+
+## Installation
+
+```bash
+npm install date-wiz
+```
+
+Works with both `require()` (CommonJS) and `import` (ESM).
+
+---
+
+## ESM (recommended)
+
+```js
+// script.mjs  — or any .js file with "type": "module" in package.json
+import { format, addBusinessDays, getRelativeTime } from 'date-wiz';
+
+console.log(format(new Date(), 'DD MMM YYYY'));
+// → "15 Mar 2026"
+```
+
+## CommonJS
+
+```js
+// script.js
+const { format, addBusinessDays, getRelativeTime } = require('date-wiz');
+
+console.log(format(new Date(), 'DD MMM YYYY'));
+// → "15 Mar 2026"
+```
+
+---
+
+## Express API — formatted timestamps
+
+```ts
+import express from 'express';
+import { smartFormat, getRelativeTime } from 'date-wiz';
+
+const app = express();
+
+app.get('/posts', async (req, res) => {
+  const locale = req.headers['accept-language']?.split(',')[0] ?? 'en';
+
+  const posts = await db.getPosts();
+
+  res.json(posts.map(post => ({
+    ...post,
+    displayDate: smartFormat(post.createdAt, { locale }),
+    relativeDate: getRelativeTime(post.createdAt, { locale }),
+  })));
+});
+```
+
+---
+
+## SLA report script
+
+```ts
+import { addBusinessDays, countBusinessDays, format, checkIsBusinessDay } from 'date-wiz';
+
+const PUBLIC_HOLIDAYS = [
+  '2026-01-01', // New Year
+  '2026-03-26', // Independence Day (Bangladesh)
+  '2026-12-25', // Christmas
+];
+
+function generateSLAReport(tickets: Array<{ id: string; opened: Date }>) {
+  return tickets.map(ticket => {
+    const deadline = addBusinessDays(ticket.opened, 5, {
+      holidays: PUBLIC_HOLIDAYS,
+    });
+    const businessDaysLeft = countBusinessDays(new Date(), deadline, {
+      holidays: PUBLIC_HOLIDAYS,
+    });
+
+    return {
+      id: ticket.id,
+      opened: format(ticket.opened, 'YYYY-MM-DD'),
+      deadline: format(deadline, 'YYYY-MM-DD'),
+      businessDaysLeft,
+      isBreached: businessDaysLeft < 0,
+    };
+  });
+}
+```
+
+---
+
+## Cron job — only run on business days
+
+```ts
+import cron from 'node-cron';
+import { checkIsBusinessDay, isWithinWorkingHours } from 'date-wiz';
+
+// Run every 30 minutes, but only process during business hours
+cron.schedule('*/30 * * * *', () => {
+  const now = new Date();
+
+  if (!checkIsBusinessDay(now)) {
+    console.log('Weekend — skipping');
+    return;
+  }
+
+  if (!isWithinWorkingHours(now, { start: '09:00', end: '18:00' })) {
+    console.log('Outside working hours — skipping');
+    return;
+  }
+
+  processQueue();
+});
+```

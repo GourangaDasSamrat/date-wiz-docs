@@ -1,0 +1,47 @@
+---
+title: Architecture
+description: How date-wiz is structured internally and why it's designed that way.
+---
+
+## Module graph
+
+```
+index.ts  (public barrel)
+    │
+    ├── wiz.ts          →  format, smart, relative, arithmetic
+    ├── format.ts       →  utils, types
+    ├── relative.ts     →  utils, types
+    ├── smart.ts        →  utils, format, types
+    ├── parse.ts        →  utils, types
+    ├── arithmetic.ts   →  utils, business, types
+    └── business.ts     →  utils, types
+```
+
+`utils.ts` and `types.ts` are the only shared leaves. No circular dependencies.
+
+---
+
+## Build pipeline
+
+```
+tsc (tsconfig.esm.json)    →  dist/esm/    (ES Modules)
+tsc (tsconfig.cjs.json)    →  dist/cjs/    (CommonJS)
+tsc (tsconfig.types.json)  →  dist/types/  (declarations only)
+node scripts/post-build.mjs  →  injects {"type":"module"} / {"type":"commonjs"}
+```
+
+---
+
+## Key decisions
+
+**No mutation** — Every function clones the input date through a single `clone()` helper in `utils.ts` before modifying it. Immutability is enforced at a single chokepoint.
+
+**`Intl` over locale files** — Month names, weekday names, and relative phrases all come from `Intl.DateTimeFormat` and `Intl.RelativeTimeFormat`. This eliminates locale data entirely and keeps the bundle under 2 KB regardless of language count.
+
+**Token regex compiled once** — `format.ts` defines `TOKEN_RE` at module scope so it's compiled only once per process, not on every call.
+
+**Sub-path exports** — The `exports` map in `package.json` exposes `date-wiz/format`, `date-wiz/relative`, etc. so bundlers can eliminate entire modules at build time.
+
+---
+
+See the full [`docs/ARCHITECTURE.md`](https://github.com/GourangaDasSamrat/date-wiz/blob/main/docs/ARCHITECTURE.md) in the main repository for deeper detail.
