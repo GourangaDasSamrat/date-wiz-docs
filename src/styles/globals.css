@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-400 dark:bg-slate-600; }
+
+  /* Selection */
+  ::selection {
+    @apply bg-brand-200 dark:bg-brand-900 text-brand-900 dark:text-brand-100;
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+           text-slate-600 dark:text-slate-400
+           hover:text-slate-900 dark:hover:text-white
+           hover:bg-slate-100 dark:hover:bg-slate-800
+           transition-all duration-150;
+  }
+
+  .nav-link.active {
+    @apply text-brand-700 dark:text-brand-400
+           bg-brand-50 dark:bg-brand-950;
+  }
+
+  .code-block {
+    @apply relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+}
